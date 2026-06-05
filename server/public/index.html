@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>gmodmap</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:#111416;
+  font-family:'Courier New',monospace;
+  font-size:12px;
+  overflow:hidden;
+  height:100vh;
+}
+#viewport{position:fixed;inset:0}
+#viewport canvas{width:100%!important;height:100%!important;display:block}
+
+#island{
+  position:fixed;
+  bottom:22px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:12px;
+  padding:9px 22px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  color:rgba(255,255,255,0.45);
+  font-size:11px;
+  pointer-events:none;
+  z-index:10;
+  white-space:nowrap;
+}
+.k{
+  background:rgba(255,255,255,0.1);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:4px;
+  padding:1px 6px;
+  color:rgba(255,255,255,0.7);
+  margin-right:3px;
+}
+
+#log{
+  position:fixed;
+  top:12px;left:12px;
+  width:300px;
+  max-height:100px;
+  overflow:hidden;
+  pointer-events:none;
+  z-index:10;
+  color:rgba(255,255,255,0.2);
+  font-size:10px;
+  line-height:1.7;
+}
+</style>
+</head>
+<body>
+<div id="viewport"></div>
+<div id="log"></div>
+<div id="island">
+  <span><span class="k">WASD</span>move</span>
+  <span><span class="k">mouse</span>look</span>
+  <span><span class="k">Q/E</span>up/down</span>
+  <span><span class="k">shift</span>fast</span>
+  <span><span class="k">click</span>lock cursor</span>
+</div>
+<script type="importmap">{"imports":{"three":"https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.module.js"}}</script>
+<script type="module" src="/js/viewer.js"></script>
+</body>
+</html>

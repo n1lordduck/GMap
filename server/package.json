@@ -1,0 +1,18 @@
+{
+  "name": "gmodmap-server",
+  "version": "1.0.0",
+  "description": "BlueMap-style 3D map viewer for Garry's Mod",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "morgan": "^1.10.0",
+    "ws": "^8.16.0",
+    "yauzl": "^3.3.2"
+  }
+}

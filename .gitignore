@@ -1,0 +1,6 @@
+server/node_modules/
+texture-cache/
+pak-cache/
+maps/
+*.bsp
+.env

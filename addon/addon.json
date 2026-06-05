@@ -1,0 +1,11 @@
+{
+  "title": "GModMap",
+  "description": "Real-time 3D map viewer — sends player and entity data to the GModMap web server.",
+  "type": "serverside",
+  "tags": ["utility", "server"],
+  "ignore": [
+    "*.psd",
+    "*.DS_Store",
+    "*.git*"
+  ]
+}
