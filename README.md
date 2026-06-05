@@ -3,7 +3,9 @@
 3d map viewer for Garry's Mod dedicated servers.
 
 Navigate the map in your browser with WASD + mouse - players appear as 3D markers updated in real time.
-This is just a silly project mine, more stuff coming soon!
+
+This is just a silly project mine, more stuff coming soon! (like crossplaying)
+
 ## Architecture
 
 ```
@@ -61,12 +63,4 @@ local BRIDGE_URL = "http://127.0.0.1:3000/api/update"
 | Shift | Fast |
 | Esc | Release cursor |
 
-## Coordinate System
 
-Source Engine uses Z-up, Three.js uses Y-up:
-
-```
-THREE.x =  source.x / 52.5
-THREE.y =  source.z / 52.5
-THREE.z = -source.y / 52.5
-```
