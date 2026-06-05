@@ -6,6 +6,8 @@ Navigate the map in your browser with WASD + mouse - players appear as 3D marker
 
 This is just a silly project mine, more stuff coming soon! (like crossplaying)
 
+This project has been heavily inspired by [BlueMap](https://bluemap.bluecolored.de/), shoutout to them!!
+
 ## Architecture
 
 ```
