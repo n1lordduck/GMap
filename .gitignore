@@ -1,11 +1,32 @@
+# Rust
 wasm/target/
 wasm/pkg/
+
+# wasm-pack output
 server/public/wasm/
+server/wasm-node/
+
+# Node
 server/node_modules/
+
+# Caches gerados em runtime
 texture-cache/
 pak-cache/
+
+# Maps e texturas (binários grandes, usuário traz os próprios)
 maps/
+materials/
 *.bsp
+*.vtf
+*.vmt
+
+# Env
 .env
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Manter as pastas no repo mas ignorar o conteúdo
+!maps/.gitkeep
+!materials/.gitkeep
