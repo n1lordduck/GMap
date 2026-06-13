@@ -15,34 +15,40 @@ GMod Dedicated Server
   [sv_main.lua] ── HTTP POST /api/update (10 Hz) ──►
 
 Node.js Bridge Server (Express + WS)
-  • /api/geometry/:map  ← reads .bsp from disk
+  • /api/bsp/:map       ← reads .bsp from disk
   • /api/update (POST)  ← receives from GMod
   • WebSocket broadcast ──► browsers
 
-Browser (Three.js)
-  • BSP geometry mesh
+Browser (Three.js + WebAssembly)
+  • BSP parsing via Rust/WASM (client-side)
   • Freecam navigation
   • Player 3D markers
 ```
 
 ## Setup
 
-### 1. Node.js Server
+### 1. Build WASM
+
+Requirements: **Rust + wasm-pack**
+
+```bash
+cd wasm/
+wasm-pack build --target web --out-dir ../server/public/wasm
+```
+
+### 2. Node.js Server
 
 Requirements: **Node.js 18+**
 
 ```bash
 cd server/
 npm install
-export GMOD_ROOT="/path/to/GarrysMod/garrysmod"
 node src/index.js
 ```
 
-`GMOD_ROOT` must point to your full GMod **client** install's `garrysmod/` folder (not the DS). Used to load textures from VPK archives.
-
 Copy your map's `.bsp` to `maps/`.
 
-### 2. GMod Addon
+### 3. GMod Addon
 
 Copy `addon/` to `garrysmod/addons/gmap/` on your server.
 
@@ -52,7 +58,7 @@ Edit `sv_main.lua` and set your Node.js server address:
 local BRIDGE_URL = "http://127.0.0.1:3000/api/update"
 ```
 
-### 3. Open the viewer
+### 4. Open the viewer
 
 `http://localhost:3000`
 
@@ -64,5 +70,3 @@ local BRIDGE_URL = "http://127.0.0.1:3000/api/update"
 | Q / E | Down / Up |
 | Shift | Fast |
 | Esc | Release cursor |
-
-

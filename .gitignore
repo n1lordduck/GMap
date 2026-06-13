@@ -1,6 +1,11 @@
+wasm/target/
+wasm/pkg/
+server/public/wasm/
 server/node_modules/
 texture-cache/
 pak-cache/
 maps/
 *.bsp
 .env
+.DS_Store
+Thumbs.db
