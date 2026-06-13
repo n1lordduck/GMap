@@ -270,9 +270,9 @@ impl BspParser {
         };
 
         let mut update_bounds = |v: [f32; 3]| {
-            for a in 0..3 {
-                if v[a] < bounds.min[a] { bounds.min[a] = v[a]; }
-                if v[a] > bounds.max[a] { bounds.max[a] = v[a]; }
+            for (a, &val) in v.iter().enumerate() {
+                if val < bounds.min[a] { bounds.min[a] = val; }
+                if val > bounds.max[a] { bounds.max[a] = val; }
             }
         };
 
@@ -339,10 +339,10 @@ impl BspParser {
 
             let mut start_idx = 0usize;
             let mut min_dist = f32::INFINITY;
-            for i in 0..4usize {
-                let dx = corners[i][0] - disp.start_pos[0];
-                let dy = corners[i][1] - disp.start_pos[1];
-                let dz = corners[i][2] - disp.start_pos[2];
+            for (i, corner) in corners.iter().enumerate() {
+                let dx = corner[0] - disp.start_pos[0];
+                let dy = corner[1] - disp.start_pos[1];
+                let dz = corner[2] - disp.start_pos[2];
                 let d  = dx*dx + dy*dy + dz*dz;
                 if d < min_dist { min_dist = d; start_idx = i; }
             }
