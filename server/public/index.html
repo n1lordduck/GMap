@@ -56,11 +56,20 @@ body{
   font-size:10px;
   line-height:1.7;
 }
+
+#status{
+  position:fixed;
+  top:12px;right:12px;
+  font-size:11px;
+  pointer-events:none;
+  z-index:10;
+}
 </style>
 </head>
 <body>
 <div id="viewport"></div>
 <div id="log"></div>
+<span id="status" style="color:#cc3333">○ disc</span>
 <div id="island">
   <span><span class="k">WASD</span>move</span>
   <span><span class="k">mouse</span>look</span>

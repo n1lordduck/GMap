@@ -3,6 +3,14 @@ import * as THREE from "three";
 const SCALE  = 52.5;
 const WS_URL = `ws://${location.host}`;
 
+let wasmModule = null;
+
+async function initWasm() {
+  const mod = await import("/wasm/gmap_wasm.js");
+  await mod.default("/wasm/gmap_wasm_bg.wasm");
+  wasmModule = mod;
+}
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setClearColor(0x111416);
@@ -54,28 +62,41 @@ function loadTex(name) {
   return tex;
 }
 
-let mapGroup = null;
+let mapGroup  = null;
+const bspCache = new Map();
 
 async function loadMap(mapname) {
+  if (!wasmModule) {
+    log("wasm not ready yet...");
+    return;
+  }
+
   log(`loading ${mapname}...`);
   if (mapGroup) { scene.remove(mapGroup); mapGroup = null; }
 
+  let bspData;
+  if (bspCache.has(mapname)) {
+    bspData = bspCache.get(mapname);
+  } else {
+    try {
+      const r = await fetch(`/api/bsp/${mapname}`);
+      if (!r.ok) { log(`bsp not found: ${mapname}`); return; }
+      const ab = await r.arrayBuffer();
+      bspData  = new Uint8Array(ab);
+      bspCache.set(mapname, bspData);
+    } catch (e) { log(`fetch error: ${e.message}`); return; }
+  }
+
   let data;
   try {
-    const r = await fetch(`/api/geometry/${mapname}`);
-    if (!r.ok) { log(`bsp not found: ${mapname}`); return; }
-    data = await r.json();
-  } catch (e) { log(`fetch error: ${e.message}`); return; }
+    const parser = new wasmModule.BspParser(bspData);
+    data = parser.extract_geometry();
+    parser.free();
+  } catch (e) { log(`wasm parse error: ${e}`); return; }
 
   mapGroup = new THREE.Group();
 
-  const meshes = data.meshes || [{
-    texture: "__default",
-    vertices: data.vertices,
-    normals:  data.normals,
-    uvs:      [],
-    indices:  data.indices,
-  }];
+  const meshes = data.meshes || [];
 
   for (const m of meshes) {
     if (!m.indices || m.indices.length === 0) continue;
@@ -85,7 +106,7 @@ async function loadMap(mapname) {
     geo.setAttribute("normal",   new THREE.BufferAttribute(new Float32Array(m.normals),  3));
     if (m.uvs?.length > 0)
       geo.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(m.uvs), 2));
-    geo.setIndex(m.indices);
+    geo.setIndex(new THREE.BufferAttribute(new Uint32Array(m.indices), 1));
 
     const isDefault = !m.texture || m.texture === "__default";
     const mat = new THREE.MeshBasicMaterial({
@@ -120,12 +141,11 @@ async function loadMap(mapname) {
     const eu = new THREE.Euler().setFromQuaternion(camera.quaternion, "YXZ");
     yaw = eu.y; pitch = eu.x;
 
-    log(`bounds: ${(maxX-minX)|0} × ${(maxY-minY)|0} × ${(maxZ-minZ)|0} u`);
+    log(`bounds: ${(maxX - minX) | 0} × ${(maxY - minY) | 0} × ${(maxZ - minZ) | 0} u`);
   }
 
   const tris = meshes.reduce((s, m) => s + (m.indices?.length || 0) / 3, 0) | 0;
   log(`${mapname}: ${tris.toLocaleString()} tris · ${meshes.length} mats`);
-  document.getElementById("map-label").textContent = mapname;
 }
 
 const playerMeshes = new Map();
@@ -227,7 +247,7 @@ async function fetchCurrentMap() {
     const r = await fetch("/api/status");
     const s = await r.json();
     if (s.map && s.map !== currentMap) { currentMap = s.map; loadMap(s.map); }
-  } catch (e) {}
+  } catch (_) {}
 }
 
 const keys = {};
@@ -276,5 +296,9 @@ let last = performance.now();
 })();
 
 window.loadMap = loadMap;
-connect();
-fetchCurrentMap();
+
+initWasm().then(() => {
+  log("wasm ready");
+  connect();
+  fetchCurrentMap();
+}).catch(e => log(`wasm init failed: ${e}`));
