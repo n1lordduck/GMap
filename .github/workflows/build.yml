@@ -1,0 +1,50 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    name: build wasm + server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: wasm
+
+      - name: install wasm-pack
+        run: cargo install wasm-pack
+
+      - name: build wasm web
+        run: wasm-pack build --target web --out-dir ../server/public/wasm --release
+        working-directory: wasm
+
+      - name: build wasm nodejs
+        run: wasm-pack build --target nodejs --out-dir ../server/wasm-node --release
+        working-directory: wasm
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: install npm deps
+        run: npm ci
+        working-directory: server
+
+      - name: smoke test server starts
+        run: |
+          timeout 5 node src/index.js &
+          sleep 3
+          curl -sf http://localhost:3000/api/status
+        working-directory: server
