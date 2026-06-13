@@ -247,7 +247,9 @@ async function fetchCurrentMap() {
     const r = await fetch("/api/status");
     const s = await r.json();
     if (s.map && s.map !== currentMap) { currentMap = s.map; loadMap(s.map); }
-  } catch (_) {}
+  } catch {
+    // ignore fetch errors -- fuck you eslint
+  }
 }
 
 const keys = {};
