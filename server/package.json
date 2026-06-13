@@ -1,18 +1,25 @@
 {
   "name": "gmodmap-server",
   "version": "2.0.0",
-  "description": "BlueMap-style 3D map viewer for Garry's Mod — WASM edition",
+  "description": "BlueMap-style 3D map viewer for Garry's Mod",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "build:wasm": "cd ../wasm && wasm-pack build --target web --out-dir ../server/public/wasm"
+    "build:wasm:web": "cd ../wasm && wasm-pack build --target web --out-dir ../server/public/wasm",
+    "build:wasm:node": "cd ../wasm && wasm-pack build --target nodejs --out-dir ../server/wasm-node",
+    "build:wasm": "npm run build:wasm:web && npm run build:wasm:node",
+    "lint": "eslint src/ public/js/"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "morgan": "^1.10.0",
     "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0"
   }
 }
