@@ -60,7 +60,7 @@ app.post("/api/update", (req, res) => {
 });
 
 app.get("/api/bsp/:mapname", (req, res) => {
-  const mapname = req.params.mapname.replace(/[^a-z0-9_\-]/gi, "");
+  const mapname = req.params.mapname.replace(/[^a-z0-9_-]/gi, "");
   const bspPath = join(MAPS_DIR, `${mapname}.bsp`);
 
   if (!existsSync(bspPath))
