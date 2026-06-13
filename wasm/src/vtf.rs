@@ -30,8 +30,8 @@ fn fmt_name(fmt: u32) -> String {
 
 fn mip_size(w: u32, h: u32, fmt: u32) -> usize {
     match fmt {
-        13 | 20 => (((w+3)/4).max(1) * ((h+3)/4).max(1) * 8) as usize,
-        14 | 15 => (((w+3)/4).max(1) * ((h+3)/4).max(1) * 16) as usize,
+        13 | 20 => (w.div_ceil(4).max(1) * h.div_ceil(4).max(1) * 8) as usize,
+        14 | 15 => (w.div_ceil(4).max(1) * h.div_ceil(4).max(1) * 16) as usize,
         0|1|11|12|16|23|26 => (w*h*4) as usize,
         2|3|9|10 => (w*h*3) as usize,
         4|6|17|18|19|21|22 => (w*h*2) as usize,
@@ -84,12 +84,12 @@ fn decode_dxt5_alpha(src: &[u8], off: usize, dst: &mut [u8], dst_off: usize, str
     let mut atbl = [0u32; 8];
     atbl[0] = a0; atbl[1] = a1;
     if a0 > a1 {
-        atbl[2] = (6*a0+1*a1)/7; atbl[3] = (5*a0+2*a1)/7;
+        atbl[2] = (6*a0+a1)/7; atbl[3] = (5*a0+2*a1)/7;
         atbl[4] = (4*a0+3*a1)/7; atbl[5] = (3*a0+4*a1)/7;
-        atbl[6] = (2*a0+5*a1)/7; atbl[7] = (1*a0+6*a1)/7;
+        atbl[6] = (2*a0+5*a1)/7; atbl[7] = (a0+6*a1)/7;
     } else {
-        atbl[2] = (4*a0+1*a1)/5; atbl[3] = (3*a0+2*a1)/5;
-        atbl[4] = (2*a0+3*a1)/5; atbl[5] = (1*a0+4*a1)/5;
+        atbl[2] = (4*a0+a1)/5; atbl[3] = (3*a0+2*a1)/5;
+        atbl[4] = (2*a0+3*a1)/5; atbl[5] = (a0+4*a1)/5;
         atbl[6] = 0; atbl[7] = 255;
     }
 
@@ -149,8 +149,8 @@ fn parse_vtf_inner(b: &[u8]) -> Result<VtfResult, String> {
 
     match fmt {
         13 | 14 | 15 | 20 => {
-            let bw = ((w + 3) / 4).max(1);
-            let bh = ((h + 3) / 4).max(1);
+            let bw = w.div_ceil(4).max(1);
+            let bh = h.div_ceil(4).max(1);
             let block_size = if fmt == 13 || fmt == 20 { 8 } else { 16 };
             for by in 0..bh {
                 for bx in 0..bw {
@@ -252,8 +252,8 @@ fn encode_png(width: u32, height: u32, rgba: &[u8]) -> Result<Vec<u8>, String> {
     out.extend_from_slice(&[137, 80, 78, 71, 13, 10, 26, 10]);
 
     let mut ihdr = [0u8; 13];
-    ihdr[0..4].copy_from_slice(&(width as u32).to_be_bytes());
-    ihdr[4..8].copy_from_slice(&(height as u32).to_be_bytes());
+    ihdr[0..4].copy_from_slice(&width.to_be_bytes());
+    ihdr[4..8].copy_from_slice(&height.to_be_bytes());
     ihdr[8] = 8;
     ihdr[9] = 6;
     write_chunk(&mut out, b"IHDR", &ihdr);
