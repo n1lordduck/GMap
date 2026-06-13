@@ -228,3 +228,94 @@ fn parse_vtf_inner(b: &[u8]) -> Result<VtfResult, String> {
 
     Ok(VtfResult { width: w as u32, height: h as u32, rgba, format: fmt_name(fmt) })
 }
+
+#[wasm_bindgen]
+pub fn vtf_to_png(data: &[u8]) -> Result<Vec<u8>, JsValue> {
+    let r = parse_vtf_inner(data).map_err(|e| JsValue::from_str(&e))?;
+    encode_png(r.width, r.height, &r.rgba).map_err(|e| JsValue::from_str(&e))
+}
+
+fn encode_png(width: u32, height: u32, rgba: &[u8]) -> Result<Vec<u8>, String> {
+    let w = width as usize;
+    let h = height as usize;
+    let row_size = 1 + w * 4;
+    let mut raw = vec![0u8; h * row_size];
+    for y in 0..h {
+        raw[y * row_size] = 0;
+        raw[y * row_size + 1..y * row_size + 1 + w * 4]
+            .copy_from_slice(&rgba[y * w * 4..(y + 1) * w * 4]);
+    }
+
+    let compressed = miniz_compress(&raw)?;
+
+    let mut out = Vec::with_capacity(8 + 25 + compressed.len() + 20);
+    out.extend_from_slice(&[137, 80, 78, 71, 13, 10, 26, 10]);
+
+    let mut ihdr = [0u8; 13];
+    ihdr[0..4].copy_from_slice(&(width as u32).to_be_bytes());
+    ihdr[4..8].copy_from_slice(&(height as u32).to_be_bytes());
+    ihdr[8] = 8;
+    ihdr[9] = 6;
+    write_chunk(&mut out, b"IHDR", &ihdr);
+    write_chunk(&mut out, b"IDAT", &compressed);
+    write_chunk(&mut out, b"IEND", &[]);
+
+    Ok(out)
+}
+
+fn write_chunk(out: &mut Vec<u8>, tag: &[u8; 4], data: &[u8]) {
+    out.extend_from_slice(&(data.len() as u32).to_be_bytes());
+    out.extend_from_slice(tag);
+    out.extend_from_slice(data);
+    let crc = crc32(&[tag.as_slice(), data].concat());
+    out.extend_from_slice(&crc.to_be_bytes());
+}
+
+fn crc32(data: &[u8]) -> u32 {
+    const TABLE: [u32; 256] = {
+        let mut t = [0u32; 256];
+        let mut i = 0usize;
+        while i < 256 {
+            let mut c = i as u32;
+            let mut j = 0;
+            while j < 8 { c = if c & 1 != 0 { 0xEDB88320 ^ (c >> 1) } else { c >> 1 }; j += 1; }
+            t[i] = c;
+            i += 1;
+        }
+        t
+    };
+    let mut c = 0xFFFFFFFFu32;
+    for &b in data { c = TABLE[((c ^ b as u32) & 0xFF) as usize] ^ (c >> 8); }
+    c ^ 0xFFFFFFFF
+}
+
+fn miniz_compress(data: &[u8]) -> Result<Vec<u8>, String> {
+    let mut out = Vec::new();
+    let adler  = adler32(data);
+
+    out.push(0x78);
+    out.push(0x9C);
+
+    let mut i = 0;
+    while i < data.len() {
+        let chunk_len = (data.len() - i).min(65535);
+        let is_last   = i + chunk_len >= data.len();
+        out.push(if is_last { 1 } else { 0 });
+        out.extend_from_slice(&(chunk_len as u16).to_le_bytes());
+        out.extend_from_slice(&(!(chunk_len as u16)).to_le_bytes());
+        out.extend_from_slice(&data[i..i + chunk_len]);
+        i += chunk_len;
+    }
+
+    out.extend_from_slice(&adler.to_be_bytes());
+    Ok(out)
+}
+
+fn adler32(data: &[u8]) -> u32 {
+    let (mut a, mut b) = (1u32, 0u32);
+    for &byte in data {
+        a = (a + byte as u32) % 65521;
+        b = (b + a) % 65521;
+    }
+    (b << 16) | a
+}
