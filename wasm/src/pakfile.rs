@@ -11,8 +11,7 @@ pub fn extract_pakfile_js(bsp_data: &[u8]) -> Result<JsValue, JsValue> {
     let obj = Object::new();
     for (name, data) in entries {
         let arr = Uint8Array::from(data.as_slice());
-        Reflect::set(&obj, &JsValue::from_str(&name), &arr.into())
-            .map_err(|e| e)?;
+        Reflect::set(&obj, &JsValue::from_str(&name), &arr.into())?;
     }
     Ok(obj.into())
 }
